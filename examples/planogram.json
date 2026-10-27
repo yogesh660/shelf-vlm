@@ -1,0 +1,37 @@
+{
+  "name": "shampoo bay 1",
+  "shelves": [
+    {
+      "slots": [
+        {
+          "brand": "Dove",
+          "facings": 4
+        },
+        {
+          "brand": "Pantene",
+          "facings": 4
+        }
+      ]
+    },
+    {
+      "slots": [
+        {
+          "brand": "Head & Shoulders",
+          "facings": 3
+        },
+        {
+          "brand": "Sunsilk",
+          "facings": 3
+        }
+      ]
+    },
+    {
+      "slots": [
+        {
+          "brand": "Garnier",
+          "facings": 5
+        }
+      ]
+    }
+  ]
+}

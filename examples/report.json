@@ -1,0 +1,57 @@
+{
+  "shelf_count": 3,
+  "products": [
+    {
+      "brand": "Dove",
+      "category": "shampoo",
+      "shelf": 0,
+      "position": 0,
+      "facings": 4
+    },
+    {
+      "brand": "Pantene",
+      "category": "shampoo",
+      "shelf": 0,
+      "position": 1,
+      "facings": 3
+    },
+    {
+      "brand": "Sunsilk",
+      "category": "shampoo",
+      "shelf": 0,
+      "position": 2,
+      "facings": 1
+    },
+    {
+      "brand": "Head & Shoulders",
+      "category": "shampoo",
+      "shelf": 1,
+      "position": 0,
+      "facings": 3
+    },
+    {
+      "brand": "Sunsilk",
+      "category": "shampoo",
+      "shelf": 1,
+      "position": 1,
+      "facings": 2
+    },
+    {
+      "brand": "Garnier",
+      "category": "shampoo",
+      "shelf": 2,
+      "position": 0,
+      "facings": 3
+    }
+  ],
+  "gaps": [
+    {
+      "shelf": 0,
+      "after_position": 1
+    },
+    {
+      "shelf": 2,
+      "after_position": 0
+    }
+  ]
+}
