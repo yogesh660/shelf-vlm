@@ -1,277 +1,288 @@
-<!doctype html>
+<!DOCTYPE html>
+
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#070709">
-  <title>Shelf Intelligence · Case study · Yogesh Awate</title>
-  <meta name="description" content="Shelf photo in, retail-audit report out: counts, gaps, share of shelf and planogram compliance from a detector and a fine-tuned vision-language model. Case study by Yogesh Awate.">
-  <meta property="og:title" content="Shelf Intelligence · Case study">
-  <meta property="og:description" content="Detector for counting, vision-language model for reading, tested code for the business numbers.">
-  <meta property="og:type" content="article">
-  <meta property="og:url" content="https://yogesh660.github.io/shelf-vlm/">
-  <link rel="canonical" href="https://yogesh660.github.io/shelf-vlm/">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23070709'/%3E%3Ctext x='8' y='43' font-family='Arial' font-weight='700' font-size='30' fill='%23f5f5f7'%3EYA%3C/text%3E%3Ccircle cx='55' cy='40' r='4' fill='%238c7cff'/%3E%3C/svg%3E">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<meta content="#070709" name="theme-color"/>
+<title>Shelf Intelligence · Case study · Yogesh Awate</title>
+<meta content="Shelf photo in, retail-audit report out: counts, gaps, share of shelf and planogram compliance from a detector and a fine-tuned vision-language model. Case study by Yogesh Awate." name="description"/>
+<meta content="Shelf Intelligence · Case study" property="og:title"/>
+<meta content="Detector for counting, vision-language model for reading, tested code for the business numbers." property="og:description"/>
+<meta content="article" property="og:type"/>
+<meta content="https://yogesh660.github.io/shelf-vlm/" property="og:url"/>
+<link href="https://yogesh660.github.io/shelf-vlm/" rel="canonical"/>
+<link href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23070709'/%3E%3Ctext x='8' y='43' font-family='Arial' font-weight='700' font-size='30' fill='%23f5f5f7'%3EYA%3C/text%3E%3Ccircle cx='55' cy='40' r='4' fill='%238c7cff'/%3E%3C/svg%3E" rel="icon"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&amp;family=Manrope:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="style.css" rel="stylesheet"/>
+<script defer="" src="vendor/plotly-basic.min.js"></script>
+<script defer="" src="data.js"></script>
+<script defer="" src="chart-theme.js"></script>
+<script defer="" src="charts.js"></script>
 </head>
 <body>
-<div class="atmosphere" aria-hidden="true"><i></i><i></i><i></i></div>
-
+<div aria-hidden="true" class="atmosphere"><i></i><i></i><i></i></div>
 <nav id="nav">
-  <a class="mark" href="https://yogesh660.github.io/Yogesh_Awate/" title="Back to portfolio"><b>YA<span>.</span></b><small>/ Case study</small></a>
-  <div class="navlinks" id="navlinks">
-    <a href="#overview">Overview</a>
-    <a href="#approach">Approach</a>
-    <a href="#architecture">Architecture</a>
-    <a href="#stack">Stack</a>
-    <a href="#results">Results</a>
-    <a href="#roadmap">Roadmap</a>
-    <a class="pill" href="https://github.com/yogesh660/shelf-vlm">GitHub
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></a>
-  </div>
-  <button class="menu" id="menu" aria-label="Menu" aria-expanded="false">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
-  </button>
+<a class="mark" href="https://yogesh660.github.io/Yogesh_Awate/" title="Back to portfolio"><b>YA<span>.</span></b><small>/ Case study</small></a>
+<div class="navlinks" id="navlinks">
+<a href="#overview">Overview</a>
+<a href="#approach">Approach</a>
+<a href="#architecture">Architecture</a>
+<a href="#stack">Stack</a>
+<a href="#results">Results</a>
+<a href="#roadmap">Roadmap</a>
+<a class="pill" href="https://github.com/yogesh660/shelf-vlm">GitHub
+      <svg fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" viewbox="0 0 24 24" width="14"><path d="M7 7h10v10"></path><path d="M7 17 17 7"></path></svg></a>
+</div>
+<button aria-expanded="false" aria-label="Menu" class="menu" id="menu">
+<svg fill="none" height="22" stroke="currentColor" stroke-linecap="round" stroke-width="1.6" viewbox="0 0 24 24" width="22"><path d="M4 7h16M4 12h16M4 17h16"></path></svg>
+</button>
 </nav>
-
 <main id="top">
-  <section class="hero">
-    <div class="reveal">
-      <p class="eyebrow"><i></i>Case study · Computer vision · Retail execution</p>
-      <h1>Shelf<br><span class="grad">intelligence.</span></h1>
-      <p class="lede">A supermarket shelf photo in; counts, empty slots, share of shelf and planogram
+<section class="hero">
+<div class="reveal">
+<p class="eyebrow"><i></i>Case study · Computer vision · Retail execution</p>
+<h1>Shelf<br/><span class="grad">intelligence.</span></h1>
+<p class="lede">A supermarket shelf photo in; counts, empty slots, share of shelf and planogram
         compliance out, as structured data a retail system can act on without a person checking it.</p>
-      <div class="actions">
-        <a class="button light" href="https://github.com/yogesh660/shelf-vlm">View repository
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></a>
-        <a class="button ghost" href="#architecture">See the architecture</a>
-      </div>
-    </div>
-    <aside class="glass factsheet reveal" aria-label="Project facts">
-      <h2>Project facts</h2>
-      <dl>
-        <dt>Domain</dt><dd>Consumer goods and retail, in-store execution</dd>
-        <dt>Type</dt><dd>Independent R&amp;D project, end-to-end reference build</dd>
-        <dt>My role</dt><dd>Architecture, implementation, evaluation design</dd>
-        <dt>Status</dt><dd><span class="status">M0 of 5 · core logic built and tested</span></dd>
-        <dt>Core stack</dt><dd><div class="chips"><span>Qwen3-VL</span><span>RT-DETR</span><span>TRL + LoRA</span><span>vLLM</span><span>pydantic</span><span>MLflow</span></div></dd>
-      </dl>
-    </aside>
-  </section>
-
-  <section class="band" id="overview">
-    <div class="section">
-      <div class="head reveal">
-        <div><span class="tag">01 / The problem</span><h2>The shelf decides<br>the sale.</h2></div>
-        <p>Brands pay for shelf space and agree a layout with the retailer. Whether the shelf actually looks like that is checked by hand.</p>
-      </div>
-      <div class="split">
-        <p class="big reveal">The agreed layout is the <em>planogram</em>: which shelf, how many facings, next to what. <em>An empty slot is a lost sale. A product on the wrong shelf sells less.</em></p>
-        <div class="body reveal">
-          <p>Today compliance is mostly checked by field reps who visit stores, count by eye or with a phone app, and file a report. It is slow, expensive and only covers a sample of stores and days.</p>
-          <p>The questions never change: <strong>is anything out of stock, what is our share of shelf, and does the shelf match the plan?</strong></p>
-          <p>Photos are cheap to take. Turning a photo into those answers <strong>reliably</strong> is the hard part: shelves are dense, packs look alike, and a wrong number in a compliance report costs money.</p>
-          <div class="stats">
-            <div><strong>~150</strong><span>PRODUCTS PER PHOTO (SKU-110K AVG.)</span></div>
-            <div><strong>11.7k</strong><span>PUBLIC SHELF IMAGES</span></div>
-            <div><strong>3</strong><span>AUDIT QUESTIONS ANSWERED</span></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="section" id="approach">
-    <div class="head reveal">
-      <div><span class="tag">02 / Approach</span><h2>Each model does<br>what it's good at.</h2></div>
-      <p>Detectors count but can't read. Vision-language models read but miscount. Business rules belong in code.</p>
-    </div>
-    <div class="cards four">
-      <article class="card reveal">
-        <span class="n">01</span>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="4" height="10" rx="1"/><rect x="13" y="7" width="4" height="6" rx="1"/></svg>
-        <h3>A detector counts</h3>
-        <p>An RT-DETR model finds every product box on dense shelves, where counting a hundred similar packs is the job.</p>
-      </article>
-      <article class="card reveal">
-        <span class="n">02</span>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
-        <h3>A VLM reads</h3>
-        <p>Qwen3-VL, fine-tuned with LoRA on labelled shelves, reads brands and categories and describes the layout, using the detector's boxes as hints.</p>
-      </article>
-      <article class="card reveal">
-        <span class="n">03</span>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5a2 2 0 0 0 2 2h1"/><path d="M16 21h1a2 2 0 0 0 2-2v-5a2 2 0 0 1 2-2 2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1"/></svg>
-        <h3>A strict contract</h3>
-        <p>The model must answer in one JSON schema, enforced by guided decoding and validated again; an invalid answer gets one retry with the error.</p>
-      </article>
-      <article class="card reveal">
-        <span class="n">04</span>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>
-        <h3>Code decides</h3>
-        <p>Shelf rows, gaps, share of shelf and compliance are plain, unit-tested Python. Explainable to a category manager, auditable by an engineer.</p>
-      </article>
-    </div>
-  </section>
-
-  <section class="band" id="architecture">
-    <div class="section">
-      <div class="head reveal">
-        <div><span class="tag">03 / Architecture</span><h2>Models perceive,<br>code decides.</h2></div>
-        <p>When a number is wrong, the design tells you which part was wrong: the boxes, the reading or the rule.</p>
-      </div>
-      <div class="glass diagram reveal">
-        <div class="diagram-title"><span class="tag">Photo to report</span><span class="chip">ShelfReport · closed JSON schema</span></div>
-        <div class="flow">
-          <div class="node out"><small>Input</small><strong>Shelf photo</strong><span>phone quality is enough; optional planogram</span></div>
-          <div class="arrow" aria-hidden="true"></div>
-          <div class="node ai"><small>Detect</small><strong>RT-DETR</strong><span>one box per product, tuned on SKU-110K</span></div>
-          <div class="arrow" aria-hidden="true"></div>
-          <div class="node ai"><small>Read</small><strong>Qwen3-VL + LoRA</strong><span>brands, categories, facings; boxes as hints</span></div>
-          <div class="arrow" aria-hidden="true"></div>
-          <div class="node code"><small>Validate</small><strong>ShelfReport</strong><span>schema-checked; one retry with the error</span></div>
-          <div class="arrow" aria-hidden="true"></div>
-          <div class="node code"><small>Decide</small><strong>Rules</strong><span>shelf rows, gaps, share of shelf, compliance</span></div>
-          <div class="arrow" aria-hidden="true"></div>
-          <div class="node data"><small>Output</small><strong>Audit report</strong><span>JSON + overlay image for the store team</span></div>
-        </div>
-        <div class="flow-note"><b class="k-ai">Model</b><b class="k-code">Deterministic code</b><b class="k-data">Output</b></div>
-      </div>
-      <ol class="steps reveal">
-        <li><div><strong>The detector returns a box per product.</strong> Boxes are grouped into shelves by height; horizontal space wider than a typical product is an empty slot.</div></li>
-        <li><div><strong>The VLM reads the shelf</strong> and fills in a ShelfReport: products left to right per shelf, facings, gaps. Shelf 0 is always the top.</div></li>
-        <li><div><strong>Compliance is scored per shelf:</strong> missing facings, extra facings, misplaced products (right product, wrong shelf) and brand block order.</div></li>
-        <li><div><strong>Share of shelf is counted in facings,</strong> the standard retail-audit definition, so results compare with what field teams already report.</div></li>
-      </ol>
-    </div>
-  </section>
-
-  <section class="section" id="principles">
-    <div class="head reveal">
-      <div><span class="tag">04 / Design principles</span><h2>Decisions,<br>written down.</h2></div>
-      <p>The reasoning behind each lives in the repository's decision records, next to the code.</p>
-    </div>
-    <div class="principles reveal">
-      <div class="principle"><span>01</span><div><h3>Models perceive, code decides</h3><p>Models detect and read. Counting rules, gaps and compliance are deterministic, tested code.</p></div></div>
-      <div class="principle"><span>02</span><div><h3>One contract</h3><p>ShelfReport is the model's JSON schema, the training target and the evaluation format at once. Changing it is a deliberate act.</p></div></div>
-      <div class="principle"><span>03</span><div><h3>Baselines first</h3><p>A rule-based gap finder exists before any model is trained, so every model has something concrete to beat.</p></div></div>
-      <div class="principle"><span>04</span><div><h3>GPU only when needed</h3><p>The core runs and is tested on a laptop and in CI. Training and serving sit behind optional extras.</p></div></div>
-    </div>
-    <div class="tradeoffs reveal">
-      <div class="tradeoff"><small>Trade-off</small><h4>Two models, not one</h4><p>More to train and serve, in exchange for reliable counts on dense shelves.</p></div>
-      <div class="tradeoff"><small>Trade-off</small><h4>Clean licences</h4><p>RT-DETR (Apache-2.0) instead of AGPL YOLO, so the code stays reusable by companies.</p></div>
-      <div class="tradeoff"><small>Out of scope</small><h4>Exact SKU matching</h4><p>Brand and category, not exact pack size. SKU recognition needs a reference-image catalogue.</p></div>
-      <div class="tradeoff"><small>Out of scope</small><h4>Shelf length</h4><p>Share is measured in facings; physical shelf length needs camera calibration.</p></div>
-    </div>
-  </section>
-
-  <section class="band" id="stack">
-    <div class="section">
-      <div class="head reveal">
-        <div><span class="tag">05 / Tech stack</span><h2>Chosen for<br>a reason.</h2></div>
-        <p>Open source end to end and portable to any cloud. Dashed items are on the roadmap.</p>
-      </div>
-      <div class="layers reveal">
-        <div class="layer"><small>Experience</small><div class="chips"><span>CLI</span><span class="planned">Gradio app</span><span class="planned">overlay images</span></div></div>
-        <div class="layer"><small>Serving</small><div class="chips"><span>OpenAI-compatible client</span><span class="planned">vLLM · guided JSON</span><span class="planned">HF Spaces ZeroGPU</span><span class="planned">Modal</span></div></div>
-        <div class="layer"><small>Models</small><div class="chips"><span class="planned">Qwen3-VL + LoRA</span><span class="planned">RT-DETR</span><span class="planned">TRL · PEFT</span></div></div>
-        <div class="layer"><small>Business logic</small><div class="chips"><span>ShelfReport schema</span><span>shelf rows + gaps</span><span>planogram compliance</span><span>metrics</span></div></div>
-        <div class="layer"><small>Data</small><div class="chips"><span>SKU-110K loader</span><span class="planned">Label Studio</span><span class="planned">DVC</span><span class="planned">own labelled photos</span></div></div>
-        <div class="layer"><small>Tracking</small><div class="chips"><span class="planned">MLflow runs + model registry</span></div></div>
-        <div class="layer"><small>Engineering</small><div class="chips"><span>uv</span><span>ruff</span><span>mypy strict</span><span>pytest</span><span>GitHub Actions</span><span>CLAUDE.md</span><span>ADRs</span></div></div>
-      </div>
-      <div class="legend"><span>Built</span><span class="p">Planned</span></div>
-
-      <div class="sub reveal"><h3>Why each choice</h3></div>
-      <div class="table-wrap reveal">
-        <table>
-          <thead><tr><th>Layer</th><th>Choice</th><th>Why</th></tr></thead>
-          <tbody>
-            <tr><td>Vision-language model</td><td><b>Qwen3-VL</b> (8B; 4B for the demo)</td><td>Strong open VLM family that reads small text on packs; documented LoRA fine-tuning; fits one GPU.</td></tr>
-            <tr><td>Fine-tuning</td><td><b>TRL SFT + PEFT LoRA/QLoRA</b></td><td>Trains small adapters on a single 24-48 GB GPU; easy to store, version and swap.</td></tr>
-            <tr><td>Detector</td><td><b>RT-DETR</b> via transformers</td><td>Counts dense shelves; Apache-2.0; same training stack as the VLM.</td></tr>
-            <tr><td>Output contract</td><td><b>pydantic ShelfReport</b> + <b>guided decoding</b></td><td>One schema for output, training and evaluation; invalid JSON never reaches a user.</td></tr>
-            <tr><td>Business logic</td><td><b>Plain Python</b></td><td>Deterministic, unit tested and explainable to non-technical stakeholders.</td></tr>
-            <tr><td>Data</td><td><b>SKU-110K</b>, <b>Label Studio</b>, <b>DVC</b></td><td>Public data for detection, own labels for brands, data versioned next to code.</td></tr>
-            <tr><td>Tracking</td><td><b>MLflow</b></td><td>Before/after numbers for every run; adapters in a model registry.</td></tr>
-            <tr><td>Serving</td><td><b>vLLM</b></td><td>High-throughput VLM serving, OpenAI-compatible API, LoRA adapters, guided JSON.</td></tr>
-            <tr><td>Demo</td><td><b>Gradio</b> on <b>Hugging Face Spaces</b></td><td>A live GPU demo for free or $9/month that embeds in a website.</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="sub reveal"><h3>On GCP, AWS or Azure</h3><p>The open-source stack runs anywhere. These are the closest managed equivalents; pointing the client at a hosted model needs no code change.</p></div>
-      <div class="table-wrap reveal">
-        <table class="cloud">
-          <thead><tr><th>Need</th><th>Open source</th><th>Google Cloud</th><th>AWS</th><th>Azure</th></tr></thead>
-          <tbody>
-            <tr><td>Images + labels</td><td>S3-compatible bucket + DVC</td><td>Cloud Storage</td><td>Amazon S3</td><td>Blob Storage</td></tr>
-            <tr><td>Labelling</td><td>Label Studio</td><td>Label Studio on Cloud Run or GKE (managed labelling service retired in 2024)</td><td>SageMaker Ground Truth</td><td>Azure Machine Learning data labelling</td></tr>
-            <tr><td>GPU training</td><td>Kaggle · Colab · Modal</td><td>Vertex AI custom training</td><td>SageMaker AI training jobs (spot)</td><td>Azure Machine Learning GPU jobs</td></tr>
-            <tr><td>Tracking + registry</td><td>MLflow</td><td>Vertex AI Experiments + Model Registry</td><td>SageMaker AI managed MLflow</td><td>Azure Machine Learning (MLflow)</td></tr>
-            <tr><td>VLM serving</td><td>vLLM</td><td>vLLM on GKE or Vertex AI endpoints</td><td>vLLM on SageMaker AI endpoints or EKS</td><td>vLLM on AKS or managed online endpoints</td></tr>
-            <tr><td>Hosted model option</td><td>-</td><td>Gemini</td><td>Amazon Bedrock</td><td>Azure OpenAI (Microsoft Foundry)</td></tr>
-            <tr><td>App / API</td><td>Gradio, FastAPI in Docker</td><td>Cloud Run (GPU available)</td><td>ECS on Fargate, or ECS Express Mode</td><td>Container Apps (serverless GPU)</td></tr>
-            <tr><td>Kubernetes</td><td>Helm chart</td><td>GKE</td><td>EKS</td><td>AKS</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </section>
-
-  <section class="section" id="results">
-    <div class="head reveal">
-      <div><span class="tag">06 / Results</span><h2>How it will<br>be measured.</h2></div>
-      <p>Every metric reported four ways: zero-shot VLM, fine-tuned VLM, detector + rules, and detector + fine-tuned VLM.</p>
-    </div>
-    <div class="kpis reveal">
-      <div class="kpi pending"><small>Count error</small><strong>—</strong><span>MAE per shelf and per brand</span></div>
-      <div class="kpi pending"><small>Gap detection</small><strong>—</strong><span>precision and recall on empty slots</span></div>
-      <div class="kpi pending"><small>Compliance F1</small><strong>—</strong><span>missing, extra, misplaced vs truth</span></div>
-      <div class="kpi pending"><small>Valid JSON</small><strong>—</strong><span>before and after guided decoding</span></div>
-    </div>
-    <p class="note reveal">Baselines arrive with M1. What exists today: the scoring code for all four, unit tested against hand-built cases.</p>
-    <div class="findings reveal">
-      <div class="finding"><span class="badge fixed">Built</span><div><h4>Rule-based gap finder</h4><p>Groups boxes into shelves (robust to one tall pack spilling into the shelf below) and flags empty slots between products and at shelf ends. It is the baseline every model has to beat.</p></div></div>
-      <div class="finding"><span class="badge fixed">Built</span><div><h4>Compliance that tells "missing" from "misplaced"</h4><p>A product on the wrong shelf is reported as misplaced, not as one missing and one extra item, which is how a field auditor would describe it.</p></div></div>
-      <div class="finding"><span class="badge learned">Decided</span><div><h4>Licence-clean detector</h4><p>Switched the planned detector from YOLO (AGPL) to RT-DETR (Apache-2.0) before writing any training code.</p></div></div>
-    </div>
-    <div class="placeholder reveal">BEFORE / AFTER FINE-TUNING · DETECTOR VS VLM · EXAMPLE SHELVES — COMING WITH M1-M3</div>
-  </section>
-
-  <section class="band" id="roadmap">
-    <div class="section">
-      <div class="head reveal">
-        <div><span class="tag">07 / Roadmap</span><h2>Where it's going.</h2></div>
-        <p>Baselines before fine-tuning, numbers before claims.</p>
-      </div>
-      <div class="timeline">
-        <article class="mile reveal"><div class="m">M0</div><span class="st done">Done</span><div><h3>Core and contract</h3><p>ShelfReport schema, shelf rows and gaps, planogram compliance, metrics, SKU-110K loader, VLM client with validation and retry, CI.</p></div></article>
-        <article class="mile reveal"><div class="m">M1</div><span class="st now">Next</span><div><h3>Baselines</h3><p>Gap finder on SKU-110K, RT-DETR fine-tuned for detection, zero-shot Qwen3-VL; first numbers in MLflow.</p><div class="chips"><span>RT-DETR</span><span>Qwen3-VL zero-shot</span><span>MLflow</span></div></div></article>
-        <article class="mile reveal"><div class="m">M2</div><span class="st">Planned</span><div><h3>Own data</h3><p>150-300 labelled shelf photos, synthetic planograms with controlled changes, training conversations, DVC.</p></div></article>
-        <article class="mile reveal"><div class="m">M3</div><span class="st">Planned</span><div><h3>Fine-tune</h3><p>LoRA SFT of Qwen3-VL; before/after on every metric; error analysis by density, lighting and angle.</p></div></article>
-        <article class="mile reveal"><div class="m">M4</div><span class="st">Planned</span><div><h3>Hybrid and structured output</h3><p>Detector boxes as hints to the VLM, guided JSON decoding in vLLM, overlay images.</p></div></article>
-        <article class="mile reveal"><div class="m">M5</div><span class="st">Planned</span><div><h3>Demo and deployment</h3><p>Gradio app on Hugging Face Spaces, vLLM endpoint on Modal, Docker and Helm.</p></div></article>
-      </div>
-    </div>
-  </section>
-
-  <section class="closing">
-    <p class="tag reveal">Explore the build</p>
-    <h2 class="reveal">From photo<br><span>to decision.</span></h2>
-    <div class="actions reveal">
-      <a class="button light" href="https://github.com/yogesh660/shelf-vlm">Read the code
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></a>
-      <a class="button ghost" href="https://yogesh660.github.io/Yogesh_Awate/">Back to portfolio</a>
-    </div>
-  </section>
+<div class="actions">
+<a class="button light" href="https://github.com/yogesh660/shelf-vlm">View repository
+          <svg fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewbox="0 0 24 24" width="16"><path d="M7 7h10v10"></path><path d="M7 17 17 7"></path></svg></a>
+<a class="button ghost" href="#architecture">See the architecture</a>
+</div>
+</div>
+<aside aria-label="Project facts" class="glass factsheet reveal">
+<h2>Project facts</h2>
+<dl>
+<dt>Domain</dt><dd>Consumer goods and retail, in-store execution</dd>
+<dt>Type</dt><dd>Independent R&amp;D project, end-to-end reference build</dd>
+<dt>My role</dt><dd>Architecture, implementation, evaluation design</dd>
+<dt>Status</dt><dd><span class="status">M0 of 5 · core logic built and tested</span></dd>
+<dt>Core stack</dt><dd><div class="chips"><span>Qwen3-VL</span><span>RT-DETR</span><span>TRL + LoRA</span><span>vLLM</span><span>pydantic</span><span>MLflow</span></div></dd>
+</dl>
+</aside>
+</section>
+<section class="band" id="overview">
+<div class="section">
+<div class="head reveal">
+<div><span class="tag">01 / The problem</span><h2>The shelf decides<br/>the sale.</h2></div>
+<p>Brands pay for shelf space and agree a layout with the retailer. Whether the shelf actually looks like that is checked by hand.</p>
+</div>
+<div class="split">
+<p class="big reveal">The agreed layout is the <em>planogram</em>: which shelf, how many facings, next to what. <em>An empty slot is a lost sale. A product on the wrong shelf sells less.</em></p>
+<div class="body reveal">
+<p>Today compliance is mostly checked by field reps who visit stores, count by eye or with a phone app, and file a report. It is slow, expensive and only covers a sample of stores and days.</p>
+<p>The questions never change: <strong>is anything out of stock, what is our share of shelf, and does the shelf match the plan?</strong></p>
+<p>Photos are cheap to take. Turning a photo into those answers <strong>reliably</strong> is the hard part: shelves are dense, packs look alike, and a wrong number in a compliance report costs money.</p>
+<div class="stats">
+<div><strong>~150</strong><span>PRODUCTS PER PHOTO (SKU-110K AVG.)</span></div>
+<div><strong>11.7k</strong><span>PUBLIC SHELF IMAGES</span></div>
+<div><strong>3</strong><span>AUDIT QUESTIONS ANSWERED</span></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section class="section" id="approach">
+<div class="head reveal">
+<div><span class="tag">02 / Approach</span><h2>Each model does<br/>what it's good at.</h2></div>
+<p>Detectors count but can't read. Vision-language models read but miscount. Business rules belong in code.</p>
+</div>
+<div class="cards four">
+<article class="card reveal">
+<span class="n">01</span>
+<svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" viewbox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2"></path><path d="M17 3h2a2 2 0 0 1 2 2v2"></path><path d="M21 17v2a2 2 0 0 1-2 2h-2"></path><path d="M7 21H5a2 2 0 0 1-2-2v-2"></path><rect height="10" rx="1" width="4" x="7" y="7"></rect><rect height="6" rx="1" width="4" x="13" y="7"></rect></svg>
+<h3>A detector counts</h3>
+<p>An RT-DETR model finds every product box on dense shelves, where counting a hundred similar packs is the job.</p>
+</article>
+<article class="card reveal">
+<span class="n">02</span>
+<svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" viewbox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+<h3>A VLM reads</h3>
+<p>Qwen3-VL, fine-tuned with LoRA on labelled shelves, reads brands and categories and describes the layout, using the detector's boxes as hints.</p>
+</article>
+<article class="card reveal">
+<span class="n">03</span>
+<svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" viewbox="0 0 24 24"><path d="M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5a2 2 0 0 0 2 2h1"></path><path d="M16 21h1a2 2 0 0 0 2-2v-5a2 2 0 0 1 2-2 2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1"></path></svg>
+<h3>A strict contract</h3>
+<p>The model must answer in one JSON schema, enforced by guided decoding and validated again; an invalid answer gets one retry with the error.</p>
+</article>
+<article class="card reveal">
+<span class="n">04</span>
+<svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" viewbox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="m9 12 2 2 4-4"></path></svg>
+<h3>Code decides</h3>
+<p>Shelf rows, gaps, share of shelf and compliance are plain, unit-tested Python. Explainable to a category manager, auditable by an engineer.</p>
+</article>
+</div>
+</section>
+<section class="band" id="architecture">
+<div class="section">
+<div class="head reveal">
+<div><span class="tag">03 / Architecture</span><h2>Models perceive,<br/>code decides.</h2></div>
+<p>When a number is wrong, the design tells you which part was wrong: the boxes, the reading or the rule.</p>
+</div>
+<figure class="figure reveal">
+<picture>
+<source media="(max-width: 700px)" srcset="img/architecture-tall.svg"/>
+<img alt="Architecture: a shelf photo goes to a detector and a fine-tuned vision-language model; the detector's boxes become shelf rows and gaps, the model's answer is validated as a ShelfReport, and planogram.py scores compliance into an audit report. Below, the training path: data, fine-tuning, MLflow registry and vLLM serving." height="650" loading="lazy" src="img/architecture-wide.svg" width="1240"/>
+</picture>
+<figcaption>System view. Solid boxes are built and tested today; dashed boxes are on the roadmap. Generated from code by <code>make site</code>.</figcaption>
+</figure>
+<ol class="steps reveal">
+<li><div><strong>The detector returns a box per product.</strong> Boxes are grouped into shelves by height; horizontal space wider than a typical product is an empty slot.</div></li>
+<li><div><strong>The VLM reads the shelf</strong> and fills in a ShelfReport: products left to right per shelf, facings, gaps. Shelf 0 is always the top.</div></li>
+<li><div><strong>Compliance is scored per shelf:</strong> missing facings, extra facings, misplaced products (right product, wrong shelf) and brand block order.</div></li>
+<li><div><strong>Share of shelf is counted in facings,</strong> the standard retail-audit definition, so results compare with what field teams already report.</div></li>
+</ol>
+</div>
+</section>
+<section class="section" id="principles">
+<div class="head reveal">
+<div><span class="tag">04 / Design principles</span><h2>Decisions,<br/>written down.</h2></div>
+<p>The reasoning behind each lives in the repository's decision records, next to the code.</p>
+</div>
+<div class="principles reveal">
+<div class="principle"><span>01</span><div><h3>Models perceive, code decides</h3><p>Models detect and read. Counting rules, gaps and compliance are deterministic, tested code.</p></div></div>
+<div class="principle"><span>02</span><div><h3>One contract</h3><p>ShelfReport is the model's JSON schema, the training target and the evaluation format at once. Changing it is a deliberate act.</p></div></div>
+<div class="principle"><span>03</span><div><h3>Baselines first</h3><p>A rule-based gap finder exists before any model is trained, so every model has something concrete to beat.</p></div></div>
+<div class="principle"><span>04</span><div><h3>GPU only when needed</h3><p>The core runs and is tested on a laptop and in CI. Training and serving sit behind optional extras.</p></div></div>
+</div>
+<div class="tradeoffs reveal">
+<div class="tradeoff"><small>Trade-off</small><h4>Two models, not one</h4><p>More to train and serve, in exchange for reliable counts on dense shelves.</p></div>
+<div class="tradeoff"><small>Trade-off</small><h4>Clean licences</h4><p>RT-DETR (Apache-2.0) instead of AGPL YOLO, so the code stays reusable by companies.</p></div>
+<div class="tradeoff"><small>Out of scope</small><h4>Exact SKU matching</h4><p>Brand and category, not exact pack size. SKU recognition needs a reference-image catalogue.</p></div>
+<div class="tradeoff"><small>Out of scope</small><h4>Shelf length</h4><p>Share is measured in facings; physical shelf length needs camera calibration.</p></div>
+</div>
+</section>
+<section class="band" id="stack">
+<div class="section">
+<div class="head reveal">
+<div><span class="tag">05 / Tech stack</span><h2>Chosen for<br/>a reason.</h2></div>
+<p>Open source end to end and portable to any cloud. Dashed items are on the roadmap.</p>
+</div>
+<div class="layers reveal">
+<div class="layer"><small>Experience</small><div class="chips"><span>CLI</span><span class="planned">Gradio app</span><span class="planned">overlay images</span></div></div>
+<div class="layer"><small>Serving</small><div class="chips"><span>OpenAI-compatible client</span><span class="planned">vLLM · guided JSON</span><span class="planned">HF Spaces ZeroGPU</span><span class="planned">Modal</span></div></div>
+<div class="layer"><small>Models</small><div class="chips"><span class="planned">Qwen3-VL + LoRA</span><span class="planned">RT-DETR</span><span class="planned">TRL · PEFT</span></div></div>
+<div class="layer"><small>Business logic</small><div class="chips"><span>ShelfReport schema</span><span>shelf rows + gaps</span><span>planogram compliance</span><span>metrics</span></div></div>
+<div class="layer"><small>Data</small><div class="chips"><span>SKU-110K loader</span><span class="planned">Label Studio</span><span class="planned">DVC</span><span class="planned">own labelled photos</span></div></div>
+<div class="layer"><small>Tracking</small><div class="chips"><span class="planned">MLflow runs + model registry</span></div></div>
+<div class="layer"><small>Engineering</small><div class="chips"><span>uv</span><span>ruff</span><span>mypy strict</span><span>pytest</span><span>GitHub Actions</span><span>CLAUDE.md</span><span>ADRs</span></div></div>
+</div>
+<div class="legend"><span>Built</span><span class="p">Planned</span></div>
+<div class="sub reveal"><h3>Why each choice</h3></div>
+<div class="table-wrap reveal">
+<table>
+<thead><tr><th>Layer</th><th>Choice</th><th>Why</th></tr></thead>
+<tbody>
+<tr><td data-label="Layer">Vision-language model</td><td data-label="Choice"><b>Qwen3-VL</b> (8B; 4B for the demo)</td><td data-label="Why">Strong open VLM family that reads small text on packs; documented LoRA fine-tuning; fits one GPU.</td></tr>
+<tr><td data-label="Layer">Fine-tuning</td><td data-label="Choice"><b>TRL SFT + PEFT LoRA/QLoRA</b></td><td data-label="Why">Trains small adapters on a single 24-48 GB GPU; easy to store, version and swap.</td></tr>
+<tr><td data-label="Layer">Detector</td><td data-label="Choice"><b>RT-DETR</b> via transformers</td><td data-label="Why">Counts dense shelves; Apache-2.0; same training stack as the VLM.</td></tr>
+<tr><td data-label="Layer">Output contract</td><td data-label="Choice"><b>pydantic ShelfReport</b> + <b>guided decoding</b></td><td data-label="Why">One schema for output, training and evaluation; invalid JSON never reaches a user.</td></tr>
+<tr><td data-label="Layer">Business logic</td><td data-label="Choice"><b>Plain Python</b></td><td data-label="Why">Deterministic, unit tested and explainable to non-technical stakeholders.</td></tr>
+<tr><td data-label="Layer">Data</td><td data-label="Choice"><b>SKU-110K</b>, <b>Label Studio</b>, <b>DVC</b></td><td data-label="Why">Public data for detection, own labels for brands, data versioned next to code.</td></tr>
+<tr><td data-label="Layer">Tracking</td><td data-label="Choice"><b>MLflow</b></td><td data-label="Why">Before/after numbers for every run; adapters in a model registry.</td></tr>
+<tr><td data-label="Layer">Serving</td><td data-label="Choice"><b>vLLM</b></td><td data-label="Why">High-throughput VLM serving, OpenAI-compatible API, LoRA adapters, guided JSON.</td></tr>
+<tr><td data-label="Layer">Demo</td><td data-label="Choice"><b>Gradio</b> on <b>Hugging Face Spaces</b></td><td data-label="Why">A live GPU demo for free or $9/month that embeds in a website.</td></tr>
+</tbody>
+</table>
+</div>
+<div class="sub reveal"><h3>On GCP, AWS or Azure</h3><p>The open-source stack runs anywhere. These are the closest managed equivalents; pointing the client at a hosted model needs no code change.</p></div>
+<div class="table-wrap reveal">
+<table class="cloud">
+<thead><tr><th>Need</th><th>Open source</th><th>Google Cloud</th><th>AWS</th><th>Azure</th></tr></thead>
+<tbody>
+<tr><td data-label="Need">Images + labels</td><td data-label="Open source">S3-compatible bucket + DVC</td><td data-label="Google Cloud">Cloud Storage</td><td data-label="AWS">Amazon S3</td><td data-label="Azure">Blob Storage</td></tr>
+<tr><td data-label="Need">Labelling</td><td data-label="Open source">Label Studio</td><td data-label="Google Cloud">Label Studio on Cloud Run or GKE (managed labelling service retired in 2024)</td><td data-label="AWS">SageMaker Ground Truth</td><td data-label="Azure">Azure Machine Learning data labelling</td></tr>
+<tr><td data-label="Need">GPU training</td><td data-label="Open source">Kaggle · Colab · Modal</td><td data-label="Google Cloud">Vertex AI custom training</td><td data-label="AWS">SageMaker AI training jobs (spot)</td><td data-label="Azure">Azure Machine Learning GPU jobs</td></tr>
+<tr><td data-label="Need">Tracking + registry</td><td data-label="Open source">MLflow</td><td data-label="Google Cloud">Vertex AI Experiments + Model Registry</td><td data-label="AWS">SageMaker AI managed MLflow</td><td data-label="Azure">Azure Machine Learning (MLflow)</td></tr>
+<tr><td data-label="Need">VLM serving</td><td data-label="Open source">vLLM</td><td data-label="Google Cloud">vLLM on GKE or Vertex AI endpoints</td><td data-label="AWS">vLLM on SageMaker AI endpoints or EKS</td><td data-label="Azure">vLLM on AKS or managed online endpoints</td></tr>
+<tr><td data-label="Need">Hosted model option</td><td data-label="Open source">-</td><td data-label="Google Cloud">Gemini</td><td data-label="AWS">Amazon Bedrock</td><td data-label="Azure">Azure OpenAI (Microsoft Foundry)</td></tr>
+<tr><td data-label="Need">App / API</td><td data-label="Open source">Gradio, FastAPI in Docker</td><td data-label="Google Cloud">Cloud Run (GPU available)</td><td data-label="AWS">ECS on Fargate, or ECS Express Mode</td><td data-label="Azure">Container Apps (serverless GPU)</td></tr>
+<tr><td data-label="Need">Kubernetes</td><td data-label="Open source">Helm chart</td><td data-label="Google Cloud">GKE</td><td data-label="AWS">EKS</td><td data-label="Azure">AKS</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section class="section" id="results">
+<div class="head reveal">
+<div><span class="tag">06 / Results</span><h2>How it will<br/>be measured.</h2></div>
+<p>Every metric reported four ways: zero-shot VLM, fine-tuned VLM, detector + rules, and detector + fine-tuned VLM.</p>
+</div>
+<div class="kpis reveal">
+<div class="kpi pending"><small>Count error</small><strong>—</strong><span>MAE per shelf and per brand</span></div>
+<div class="kpi pending"><small>Gap detection</small><strong>—</strong><span>precision and recall on empty slots</span></div>
+<div class="kpi pending"><small>Compliance F1</small><strong>—</strong><span>missing, extra, misplaced vs truth</span></div>
+<div class="kpi pending"><small>Valid JSON</small><strong>—</strong><span>before and after guided decoding</span></div>
+</div>
+<p class="note reveal">Baselines arrive with M1. What exists today: the scoring code for all four, unit tested against hand-built cases.</p>
+<div class="findings reveal">
+<div class="finding"><span class="badge fixed">Built</span><div><h4>Rule-based gap finder</h4><p>Groups boxes into shelves (robust to one tall pack spilling into the shelf below) and flags empty slots between products and at shelf ends. It is the baseline every model has to beat.</p></div></div>
+<div class="finding"><span class="badge fixed">Built</span><div><h4>Compliance that tells "missing" from "misplaced"</h4><p>A product on the wrong shelf is reported as misplaced, not as one missing and one extra item, which is how a field auditor would describe it.</p></div></div>
+<div class="finding"><span class="badge learned">Decided</span><div><h4>Licence-clean detector</h4><p>Switched the planned detector from YOLO (AGPL) to RT-DETR (Apache-2.0) before writing any training code.</p></div></div>
+</div>
+<div class="sub reveal"><h3>What the baseline does today</h3><p>Real output of the built code on the bundled example. No model is involved yet; these are the numbers every model will be measured against.</p></div>
+<figure class="figure narrow reveal">
+<img alt="The gap finder on the bundled test shelf: 25 products in three shelf rows, with one empty slot in the middle of shelf 1 and an empty right end on shelf 2 highlighted as gaps." height="801" loading="lazy" src="img/gap-finder.svg" width="980"/>
+<figcaption>rows.py on the bundled test shelf (SKU-110K annotation format): shelves found from box heights, empty slots highlighted. Products in purple, gaps hatched.</figcaption>
+</figure>
+<div class="chart-grid reveal" style="margin-top:22px">
+<article class="chart-card">
+<h4>Planned vs on the shelf</h4>
+<p>Facings per brand from the example planogram and report. Pantene and Garnier are short.</p>
+<div aria-label="Grouped bar chart of planned and observed facings per brand" class="chart" data-chart="facings" role="img"></div>
+<p class="source">Example data · <a href="https://github.com/yogesh660/shelf-vlm/tree/main/examples">examples/</a></p>
+</article>
+<article class="chart-card">
+<h4>Compliance, shelf by shelf</h4>
+<p>The top shelf has a misplaced product; the bottom shelf is missing two facings.</p>
+<div aria-label="Stacked bar chart of matched, missing and extra facings per shelf" class="chart" data-chart="shelves" role="img"></div>
+<p class="source">Scored by <a href="https://github.com/yogesh660/shelf-vlm/blob/main/src/shelf/planogram.py">planogram.py</a></p>
+</article>
+<article class="chart-card">
+<h4>Share of shelf</h4>
+<p>Share of facings per brand, the standard retail-audit measure, with the overall compliance score.</p>
+<div aria-label="Donut chart of share of shelf per brand with overall compliance in the centre" class="chart" data-chart="share" role="img"></div>
+<p class="source">Example data · <code>ShelfReport.share_of_shelf()</code></p>
+</article>
+<article class="chart-card">
+<h4>Training data: SKU-110K</h4>
+<p>11,743 densely packed shelf images with product boxes, used to train and test the detector.</p>
+<div aria-label="Bar chart of SKU-110K images per split: train, validation and test" class="chart" data-chart="splits" role="img"></div>
+<p class="source">Goldman et al., CVPR 2019 · <a href="https://github.com/eg4000/SKU110K_CVPR19">dataset</a></p>
+</article>
+</div>
+</section>
+<section class="band" id="roadmap">
+<div class="section">
+<div class="head reveal">
+<div><span class="tag">07 / Roadmap</span><h2>Where it's going.</h2></div>
+<p>Baselines before fine-tuning, numbers before claims.</p>
+</div>
+<div class="timeline">
+<article class="mile reveal"><div class="m">M0</div><span class="st done">Done</span><div><h3>Core and contract</h3><p>ShelfReport schema, shelf rows and gaps, planogram compliance, metrics, SKU-110K loader, VLM client with validation and retry, CI.</p></div></article>
+<article class="mile reveal"><div class="m">M1</div><span class="st now">Next</span><div><h3>Baselines</h3><p>Gap finder on SKU-110K, RT-DETR fine-tuned for detection, zero-shot Qwen3-VL; first numbers in MLflow.</p><div class="chips"><span>RT-DETR</span><span>Qwen3-VL zero-shot</span><span>MLflow</span></div></div></article>
+<article class="mile reveal"><div class="m">M2</div><span class="st">Planned</span><div><h3>Own data</h3><p>150-300 labelled shelf photos, synthetic planograms with controlled changes, training conversations, DVC.</p></div></article>
+<article class="mile reveal"><div class="m">M3</div><span class="st">Planned</span><div><h3>Fine-tune</h3><p>LoRA SFT of Qwen3-VL; before/after on every metric; error analysis by density, lighting and angle.</p></div></article>
+<article class="mile reveal"><div class="m">M4</div><span class="st">Planned</span><div><h3>Hybrid and structured output</h3><p>Detector boxes as hints to the VLM, guided JSON decoding in vLLM, overlay images.</p></div></article>
+<article class="mile reveal"><div class="m">M5</div><span class="st">Planned</span><div><h3>Demo and deployment</h3><p>Gradio app on Hugging Face Spaces, vLLM endpoint on Modal, Docker and Helm.</p></div></article>
+</div>
+</div>
+</section>
+<section class="closing">
+<p class="tag reveal">Explore the build</p>
+<h2 class="reveal">From photo<br/><span>to decision.</span></h2>
+<div class="actions reveal">
+<a class="button light" href="https://github.com/yogesh660/shelf-vlm">Read the code
+        <svg fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewbox="0 0 24 24" width="16"><path d="M7 7h10v10"></path><path d="M7 17 17 7"></path></svg></a>
+<a class="button ghost" href="https://yogesh660.github.io/Yogesh_Awate/">Back to portfolio</a>
+</div>
+</section>
 </main>
-
 <footer><a class="mark" href="https://yogesh660.github.io/Yogesh_Awate/"><b>YA<span>.</span></b></a><p>Case study · shelf-vlm</p><span>© 2026 YOGESH AWATE</span></footer>
-
 <script>
   const nav = document.getElementById('nav');
   const links = document.getElementById('navlinks');
