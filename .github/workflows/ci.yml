@@ -1,0 +1,45 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: ${{ matrix.python }}
+          enable-cache: true
+      - name: install
+        # --locked fails if uv.lock is out of date with pyproject.toml
+        run: |
+          if [ -f uv.lock ]; then uv sync --locked; else uv sync; fi
+      - name: lint
+        run: make lint
+      - name: typecheck
+        # mypy and pytest have no GitHub output format; their failures become annotations
+        run: |
+          set -o pipefail
+          status=0
+          make typecheck 2>&1 | tee mypy.log || status=$?
+          sed -nE 's/^([^:]+):([0-9]+): error: (.*)$/::error file=\1,line=\2,title=mypy::\3/p' mypy.log
+          exit $status
+      - name: test
+        run: |
+          set -o pipefail
+          status=0
+          uv run pytest -rf --cov=shelf --cov-report=term-missing 2>&1 | tee pytest.log || status=$?
+          sed -nE 's/^FAILED ([^:]+)::([^ ]+)( - (.*))?$/::error file=\1,title=\2::\4/p' pytest.log
+          exit $status
