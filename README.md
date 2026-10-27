@@ -5,9 +5,14 @@
 Shelf photo in, retail-audit report out: products and facings per shelf, empty slots, share of
 shelf by brand and a planogram compliance score, as JSON a downstream system can trust.
 
-Status: **M0** - the output contract and everything that works on it (shelf rows, gap finding,
-compliance, metrics, dataset loader, VLM client) is in place and tested. Models come next;
-see the [roadmap](docs/ROADMAP.md).
+**In 30 seconds:** a detector counts the products, a fine-tuned vision-language model reads
+the brands, and plain, tested code turns both into the numbers a retail audit needs. The
+model must answer in a fixed JSON schema, so its output can feed a dashboard or an alert
+without anyone checking it by hand.
+
+Status: **M0** - the output contract and everything that works on it (shelf rows, gap
+finding, compliance, metrics, dataset loader, VLM client) is built and tested. Model training
+comes next; see the [roadmap](docs/ROADMAP.md).
 
 ```
 $ make demo
@@ -21,22 +26,165 @@ compliance 79%  (5 issue(s))
   shelf 2: 3/5 planned facings  missing {'Garnier': 2}
 ```
 
-## Why a detector and a VLM
+## The problem
 
-Retail audits need exact counts and positions, and they need someone to read the labels.
-Detectors count dense shelves well but don't know brands; vision-language models read brands
-and reason about layout but miscount dozens of similar packs. This project uses both and
-measures each alone and combined ([ADR 0001](docs/adr/0001-detector-plus-vlm.md)).
+Consumer-goods brands pay for shelf space and agree with retailers how their products should
+be placed: which shelf, how many facings, next to what. This plan is the *planogram*. Whether
+the shelf actually looks like that decides sales: an empty slot is a lost sale, and a product
+on the wrong shelf sells less.
+
+Today this is mostly checked by field reps who visit stores, count by eye or with a phone app,
+and file a report. It is slow, expensive and only covers a sample of stores and days. The
+questions are always the same:
+
+- Is anything **out of stock**, and where?
+- What is our **share of shelf** compared to competitors?
+- Does the shelf **comply with the planogram**, and if not, what is wrong?
+
+Photos are cheap to take. Turning a photo into those answers reliably is the hard part.
+
+## How this project solves it
+
+**Split the job by what each model is good at.** Shelves are dense: SKU-110K
+averages around 150 products per photo. Object detectors count dense, similar objects well but don't know brands.
+Vision-language models (VLMs) read brand names and understand layout but miscount dozens of
+similar packs. The project uses both: the detector finds product boxes, the VLM reads them,
+and each is measured alone and combined ([ADR 0001](docs/adr/0001-detector-plus-vlm.md)).
+
+**Put business logic in code, not in the model.** Shelf rows, gaps, share of shelf and
+planogram compliance are computed by plain Python from the model's output. That logic is
+deterministic, unit tested and easy to explain to a category manager.
+
+**Force a contract on the model.** The VLM must answer in the `ShelfReport` JSON schema
+(guided decoding in vLLM), and the answer is validated again before use; an invalid answer
+gets one retry with the error shown to the model ([ADR 0002](docs/adr/0002-structured-output.md)).
+
+**Fine-tune only where it pays.** Start with zero-shot baselines, then LoRA fine-tune the VLM
+on labelled shelf photos and report the gain on every metric.
+
+## Design principles
+
+1. **Models perceive, code decides.** Models detect and read; counting rules, gaps and
+   compliance are code. When a number is wrong, you can tell which part was wrong.
+2. **A contract between model and system.** `ShelfReport` is the single definition of the
+   output: the VLM's JSON schema, the training target and the evaluation format.
+3. **Baselines first.** A rule-based gap finder exists before any model is trained, so every
+   model has something concrete to beat.
+4. **Runs without a GPU until it needs one.** The core is plain Python and pydantic, tested on
+   a laptop and in CI. Training and serving live behind optional extras.
+5. **Clean licences.** MIT code, Apache-2.0 detector (RT-DETR) instead of AGPL YOLO
+   ([ADR 0003](docs/adr/0003-detector-licence.md)).
+
+### Trade-offs and what's out of scope
+
+- **Two models instead of one.** More to train and serve, in exchange for reliable counts.
+- **Facings, not shelf length.** Share of shelf is measured in facings, the common audit
+  definition; measuring shelf length needs camera calibration and is out of scope.
+- **No product-level SKU matching.** Brand and category, not exact SKU and pack size. SKU
+  recognition needs a product catalogue with reference images.
+- **Not a product.** No store app or retailer integration; the point is a reliable,
+  measurable perception and reporting pipeline.
+
+## How it works
 
 ```mermaid
 flowchart LR
-    IMG[shelf photo] --> DET[detector]
-    IMG --> VLM[Qwen3-VL + LoRA]
+    IMG[shelf photo] --> DET[detector<br/>product boxes]
+    IMG --> VLM[Qwen3-VL + LoRA<br/>brands, categories]
     DET -- boxes as hints --> VLM
-    DET --> ROWS[shelves + gaps]
-    VLM --> REP[ShelfReport JSON]
-    REP --> CMP[planogram compliance]
+    DET --> ROWS[rows.py<br/>shelves + gaps]
+    VLM -- ShelfReport JSON --> VAL{valid?}
+    VAL -- no, retry once --> VLM
+    VAL -- yes --> CMP[planogram.py<br/>compliance]
+    PLAN[planogram] --> CMP
+    CMP --> OUT[report: gaps, share of shelf,<br/>compliance issues]
 ```
+
+1. The **detector** returns a box per product.
+2. **`rows.py`** groups boxes into shelves by height and marks empty slots: horizontal space
+   wider than a typical product, between products or at the ends of a shelf.
+3. The **VLM** gets the photo (and in the hybrid setup the boxes) and returns a `ShelfReport`:
+   brands, categories, facings and gaps per shelf.
+4. **`planogram.py`** compares the report with the planned layout, shelf by shelf: missing
+   facings, extra facings, misplaced products (right product, wrong shelf) and block order.
+
+## Tech stack
+
+Built now (M0) and planned (M1-M5, see the [roadmap](docs/ROADMAP.md)):
+
+```mermaid
+flowchart TB
+    subgraph data[Data]
+        SKU[SKU-110K<br/>11.7k shelf images]
+        OWN[own labelled photos<br/>Label Studio, planned M2]
+        DVC[DVC + S3-compatible storage<br/>planned M2]
+    end
+    subgraph train[Train - planned M1-M3]
+        DT[RT-DETR detector<br/>transformers]
+        FT[Qwen3-VL LoRA<br/>TRL + PEFT]
+        GPU[GPU: Kaggle / Colab / Modal]
+    end
+    subgraph core[Core - built]
+        SC[ShelfReport schema<br/>pydantic]
+        RW[rows + gaps]
+        PL[planogram compliance]
+        MT[metrics]
+    end
+    subgraph track[Track]
+        ML[MLflow<br/>runs + model registry]
+    end
+    subgraph serve[Serve and demo - planned M4-M5]
+        VL[vLLM<br/>guided JSON decoding]
+        GR[Gradio app<br/>HF Spaces ZeroGPU]
+        K8[Docker + Helm]
+    end
+    subgraph dev[Develop - built]
+        H[CLAUDE.md, uv, ruff, mypy,<br/>pytest, GitHub Actions]
+    end
+    SKU --> DT
+    OWN --> FT
+    DVC -.-> OWN
+    GPU -.-> DT & FT
+    DT & FT --> ML
+    FT --> VL --> SC
+    DT --> RW
+    SC --> PL
+    SC --> MT
+    VL --> GR
+    VL --> K8
+```
+
+| Layer | Choice | Why this |
+|---|---|---|
+| Vision-language model | **Qwen3-VL** (8B, 4B for the demo) | strong open VLM family, reads small text on packs, documented LoRA fine-tuning, fits one GPU |
+| Fine-tuning | **TRL SFT + PEFT LoRA/QLoRA** | trains adapters on a single 24-48 GB GPU; adapters are small to store and swap |
+| Detector | **RT-DETR** via Hugging Face transformers | counts dense shelves; Apache-2.0; same training stack as the VLM |
+| Output contract | **pydantic `ShelfReport`** + **guided decoding** in vLLM | one schema for output, training target and evaluation; invalid JSON never reaches a user |
+| Business logic | **plain Python** (rows, gaps, compliance, metrics) | deterministic, unit tested, explainable to non-technical stakeholders |
+| Data | **SKU-110K** + own labelled photos, **Label Studio**, **DVC** | public data for detection; own data for brands; data versioned next to code |
+| Experiment tracking | **MLflow** | before/after numbers for every run; adapters in a model registry |
+| Serving | **vLLM** | high-throughput VLM serving, OpenAI-compatible API, LoRA adapters, guided JSON |
+| Demo | **Gradio** on **Hugging Face Spaces (ZeroGPU)** | free or $9/month GPU demo that embeds in a website |
+| Engineering | **uv, ruff, mypy strict, pytest, GitHub Actions, CLAUDE.md** | reproducible, checked, and safe for coding agents to work in |
+
+### Running it on GCP, AWS or Azure
+
+The open-source stack runs anywhere. With managed services, the closest equivalents are:
+
+| Need | Open-source default | Google Cloud | AWS | Azure |
+|---|---|---|---|---|
+| Image and label storage | S3-compatible bucket + DVC | Cloud Storage | Amazon S3 | Azure Blob Storage |
+| Labelling | Label Studio | Label Studio on Cloud Run or GKE (Google's managed labelling service was shut down in 2024) | SageMaker Ground Truth | Azure Machine Learning data labelling |
+| GPU training jobs | Kaggle / Colab / Modal | Vertex AI custom training (Gemini Enterprise Agent Platform) | SageMaker AI training jobs (managed spot) | Azure Machine Learning jobs on GPU clusters |
+| Experiment tracking + registry | MLflow | Vertex AI Experiments + Model Registry | SageMaker AI managed MLflow + Model Registry | Azure Machine Learning (MLflow-compatible) |
+| VLM serving | vLLM | vLLM on GKE or Vertex AI endpoints | vLLM on SageMaker AI endpoints or EKS | vLLM on AKS or Azure Machine Learning managed online endpoints |
+| Hosted alternative to own VLM | - | Gemini models | Amazon Bedrock models | Azure OpenAI in Microsoft Foundry |
+| App / API | Gradio, FastAPI in Docker | Cloud Run (GPU available) | ECS on Fargate, or ECS Express Mode | Azure Container Apps (serverless GPU available) |
+| Kubernetes | Helm chart | GKE | Amazon EKS | AKS |
+| CI/CD | GitHub Actions | GitHub Actions or Cloud Build | GitHub Actions or CodePipeline/CodeBuild | GitHub Actions or Azure Pipelines |
+
+Switching to a hosted model only means pointing `SHELF_VLM_BASE_URL` at an OpenAI-compatible
+endpoint; the schema validation and everything downstream stay the same.
 
 ## Quickstart
 
@@ -57,9 +205,6 @@ export SHELF_VLM_BASE_URL=http://localhost:8000/v1 SHELF_VLM_MODEL=Qwen/Qwen3-VL
 uv run shelf analyse my_shelf.jpg
 ```
 
-The reply is validated against `ShelfReport`; if it's invalid, the model gets the validation
-error and one more try ([ADR 0002](docs/adr/0002-structured-output.md)).
-
 ## What's in the core
 
 | Module | Does |
@@ -71,15 +216,25 @@ error and one more try ([ADR 0002](docs/adr/0002-structured-output.md)).
 | [`vlm.py`](src/shelf/vlm.py) | prompt, standard-library OpenAI-compatible client, validate + retry |
 | [`data/sku110k.py`](src/shelf/data/sku110k.py) | SKU-110K download and annotation parsing |
 
-All of it is plain Python + pydantic, so it runs and is tested without a GPU. A repo check
-keeps ML frameworks out of the core.
+## How it will be measured
+
+| Metric | Answers |
+|---|---|
+| Count MAE / MAPE | are products per shelf and per brand counted correctly? |
+| Gap precision / recall | are empty slots found, without false alarms? |
+| Share-of-shelf error | are brand shares close to the labelled truth? |
+| Compliance F1 | are missing, extra and misplaced products found? |
+| JSON validity rate | how often is the model's answer usable as-is? |
+| Latency per image | is it fast enough for an app in the store? |
+
+Each is reported for: zero-shot VLM, fine-tuned VLM, detector + rules, detector + fine-tuned VLM.
 
 ## Data
 
 - **SKU-110K** (Goldman et al., CVPR 2019): 11,743 shelf images with product boxes, no brand
   labels. `make data` downloads it (about 13.6 GB). Research use; see the
   [original repository](https://github.com/eg4000/SKU110K_CVPR19) for terms.
-- **Own photos** (M2): labelled with brand, category and gaps. Not published.
+- **Own photos** (M2): labelled with brand, category and gaps. Not published; no people in frame.
 
 ## Working in this repo
 
