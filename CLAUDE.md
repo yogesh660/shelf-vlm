@@ -39,6 +39,7 @@ tests/unit/         one test file per module: tests/unit/test_<module>.py
 tests/fixtures/     tiny annotation file in the SKU-110K format
 tests/test_harness.py  checks on the repo itself
 docs/adr/           why things are the way they are
+site/               public case-study page, deployed by .github/workflows/pages.yml
 ```
 
 ## Rules

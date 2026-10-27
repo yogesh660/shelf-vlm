@@ -2,6 +2,8 @@
 
 [![ci](https://github.com/yogesh660/shelf-vlm/actions/workflows/ci.yml/badge.svg)](https://github.com/yogesh660/shelf-vlm/actions/workflows/ci.yml)
 
+**Case study page:** [yogesh660.github.io/shelf-vlm](https://yogesh660.github.io/shelf-vlm/)
+
 Shelf photo in, retail-audit report out: products and facings per shelf, empty slots, share of
 shelf by brand and a planogram compliance score, as JSON a downstream system can trust.
 
