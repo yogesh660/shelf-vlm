@@ -5,7 +5,7 @@ RUN := uv run
 DATA ?= data/sku110k
 
 .DEFAULT_GOAL := help
-.PHONY: help setup lock lint format typecheck test check schema data data-stats demo clean
+.PHONY: help setup lock lint format typecheck test check schema data data-stats demo site clean
 
 help: ## List available targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*## "}; {printf "  %-12s %s\n", $$1, $$2}'
@@ -18,12 +18,12 @@ lock: ## Re-resolve dependencies into uv.lock after editing pyproject.toml
 	uv lock
 
 lint: ## Ruff lint and format check (no changes)
-	$(RUN) ruff check src tests
-	$(RUN) ruff format --check src tests
+	$(RUN) ruff check src tests scripts
+	$(RUN) ruff format --check src tests scripts
 
 format: ## Auto-fix lint issues and format code
-	$(RUN) ruff check --fix src tests
-	$(RUN) ruff format src tests
+	$(RUN) ruff check --fix src tests scripts
+	$(RUN) ruff format src tests scripts
 
 typecheck: ## Mypy (strict) on src/
 	$(RUN) mypy
@@ -45,6 +45,9 @@ data-stats: ## Image and box counts per split
 demo: ## Rows, gaps and compliance on the bundled example, no data or GPU needed
 	$(RUN) shelf rows tests/fixtures/annotations_mini.csv shelf_a.jpg
 	$(RUN) shelf score --planogram examples/planogram.json --report examples/report.json
+
+site: ## Regenerate the case-study page's diagrams, gap picture and chart data
+	$(RUN) python scripts/site_assets.py
 
 clean: ## Remove caches
 	rm -rf .pytest_cache .mypy_cache .ruff_cache

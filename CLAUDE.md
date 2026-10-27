@@ -21,6 +21,7 @@ Always use the make targets, they are exactly what CI runs. Dependencies are man
 - `make schema` - the JSON schema the VLM answers in
 - `make demo` - rows, gaps and compliance on the bundled example (no data, no GPU)
 - `make data` / `make data-stats` - download SKU-110K (13.6 GB) and summarise it
+- `make site` - regenerate the case-study page's diagrams, gap picture and chart data
 
 ## Layout
 
@@ -39,7 +40,8 @@ tests/unit/         one test file per module: tests/unit/test_<module>.py
 tests/fixtures/     tiny annotation file in the SKU-110K format
 tests/test_harness.py  checks on the repo itself
 docs/adr/           why things are the way they are
-site/               public case-study page, deployed by .github/workflows/pages.yml
+site/               public case-study page (Plotly charts, SVG diagrams), deployed by pages.yml
+scripts/            site_assets.py builds site/img and site/data.js from the core and examples
 ```
 
 ## Rules
