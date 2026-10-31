@@ -282,6 +282,24 @@ MAE/MAPE. The checkpoint is initialized from `PekingU/rtdetr_r50vd`, uses 640x64
 inputs, and defaults to 10 epochs with effective batch size 16. Full metrics remain pending
 the GPU run.
 
+### Zero-shot VLM baseline (M1 in progress)
+
+With an OpenAI-compatible Qwen3-VL endpoint configured as in the quickstart, run a fixed
+sample and retain both the aggregate metrics and per-image reports:
+
+```bash
+uv run shelf eval-vlm \
+  data/sku110k/SKU110K_fixed/annotations/annotations_test.csv \
+  data/sku110k/SKU110K_fixed/images \
+  --sample-size 50 --seed 0 --output outputs/zero-shot-vlm.json
+```
+
+The evaluator reports JSON validity on the first attempt and after the existing single retry,
+plus total-facing count MAE/MAPE. Invalid final replies count as zero predictions rather than
+being excluded. SKU-110K has product boxes but no brand labels, so this public-data baseline
+measures total counting and schema validity; brand accuracy requires the labelled M2 data.
+Full sample metrics remain pending a model endpoint and dataset run.
+
 - **SKU-110K** (Goldman et al., CVPR 2019): 11,743 shelf images with product boxes, no brand
   labels. `make data` downloads it (about 13.6 GB). Research use; see the
   [original repository](https://github.com/eg4000/SKU110K_CVPR19) for terms.

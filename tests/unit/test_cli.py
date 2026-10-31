@@ -43,6 +43,39 @@ def test_eval_detector(tmp_path, capsys):
     assert result["fn"] == 27
 
 
+def test_eval_vlm(tmp_path, capsys, monkeypatch):
+    from shelf import vlm
+
+    class FakeClient:
+        def complete(self, messages, json_schema):
+            return (ROOT / "examples/report.json").read_text()
+
+    images = tmp_path / "images"
+    images.mkdir()
+    (images / "shelf_a.jpg").write_bytes(b"image")
+    (images / "shelf_b.jpg").write_bytes(b"image")
+    output = tmp_path / "result.json"
+    monkeypatch.setattr(vlm, "OpenAICompatibleClient", FakeClient)
+    assert (
+        main(
+            [
+                "eval-vlm",
+                str(ROOT / "tests/fixtures/annotations_mini.csv"),
+                str(images),
+                "--sample-size",
+                "1",
+                "--output",
+                str(output),
+            ]
+        )
+        == 0
+    )
+    result = json.loads(capsys.readouterr().out)
+    assert result["images"] == 1
+    assert result["valid_first_attempt_rate"] == 1
+    assert json.loads(output.read_text()) == result
+
+
 def test_rows(capsys):
     assert main(["rows", str(ROOT / "tests/fixtures/annotations_mini.csv"), "shelf_a.jpg"]) == 0
     out = capsys.readouterr().out
