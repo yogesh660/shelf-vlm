@@ -88,6 +88,56 @@ def cmd_eval_detector(args: argparse.Namespace) -> int:
     return 0 if result.images else 1
 
 
+def cmd_eval_vlm(args: argparse.Namespace) -> int:
+    from shelf.data.sku110k import read_annotations
+    from shelf.vlm import OpenAICompatibleClient
+    from shelf.vlm_eval import evaluate_vlm
+
+    try:
+        result = evaluate_vlm(
+            OpenAICompatibleClient(),
+            read_annotations(args.annotations),
+            args.images,
+            sample_size=args.sample_size,
+            seed=args.seed,
+        )
+    except (OSError, ValueError) as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
+    payload = {
+        "protocol": "zero-shot-vlm-v1",
+        "seed": args.seed,
+        "images": result.images,
+        "valid_first_attempt": result.valid_first_attempt,
+        "valid_first_attempt_rate": (
+            result.valid_first_attempt / result.images if result.images else 0.0
+        ),
+        "valid_after_retry": result.valid_after_retry,
+        "valid_after_retry_rate": (
+            result.valid_after_retry / result.images if result.images else 0.0
+        ),
+        "count_mae": result.counts.mae,
+        "count_mape": result.counts.mape,
+        "results": [
+            {
+                "image": item.image,
+                "gold_count": item.gold_count,
+                "predicted_count": item.predicted_count,
+                "attempts": item.attempts,
+                "errors": item.errors,
+                "report": item.report.model_dump(mode="json") if item.report else None,
+            }
+            for item in result.results
+        ],
+    }
+    text = json.dumps(payload, indent=2)
+    if args.output:
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        args.output.write_text(text + "\n")
+    print(text)
+    return 0 if result.images else 1
+
+
 def cmd_data_download(args: argparse.Namespace) -> int:
     from shelf.data.sku110k import download
 
@@ -182,6 +232,14 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--score", type=float, default=0.5)
     p.add_argument("--iou", type=float, default=0.5)
     p.set_defaults(func=cmd_eval_detector)
+
+    p = sub.add_parser("eval-vlm", help="evaluate zero-shot VLM validity and counting")
+    p.add_argument("annotations", type=Path)
+    p.add_argument("images", type=Path)
+    p.add_argument("--sample-size", type=int, default=50)
+    p.add_argument("--seed", type=int, default=0)
+    p.add_argument("--output", type=Path)
+    p.set_defaults(func=cmd_eval_vlm)
 
     data = sub.add_parser("data", help="SKU-110K dataset").add_subparsers(required=True)
     p = data.add_parser("download")
