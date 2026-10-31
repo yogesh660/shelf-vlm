@@ -11,6 +11,20 @@ def test_schema(capsys):
     assert json.loads(capsys.readouterr().out)["title"] == "ShelfReport"
 
 
+def test_eval_gaps(capsys):
+    assert main(["eval-gaps", str(ROOT / "tests/fixtures/annotations_mini.csv")]) == 0
+    result = json.loads(capsys.readouterr().out)
+    assert result["images"] > 0
+    assert result["tp"] + result["fn"] == result["images"]
+
+
+def test_eval_gaps_empty(tmp_path, capsys):
+    path = tmp_path / "empty.csv"
+    path.write_text("")
+    assert main(["eval-gaps", str(path)]) == 1
+    assert json.loads(capsys.readouterr().out)["images"] == 0
+
+
 def test_rows(capsys):
     assert main(["rows", str(ROOT / "tests/fixtures/annotations_mini.csv"), "shelf_a.jpg"]) == 0
     out = capsys.readouterr().out

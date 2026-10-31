@@ -24,6 +24,38 @@ def cmd_schema(_: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_eval_gaps(args: argparse.Namespace) -> int:
+    from shelf.data.sku110k import read_annotations
+    from shelf.evaluation import evaluate_gaps
+
+    if not 0 < args.iou <= 1:
+        print("IoU threshold must be in (0, 1]", file=sys.stderr)
+        return 1
+    result = evaluate_gaps(
+        read_annotations(args.annotations).values(), seed=args.seed, threshold=args.iou
+    )
+    detection = result.detection
+    print(
+        json.dumps(
+            {
+                "protocol": "one-interior-product-removed-v1",
+                "seed": args.seed,
+                "iou_threshold": args.iou,
+                "images": result.images,
+                "skipped": result.skipped,
+                "tp": detection.tp,
+                "fp": detection.fp,
+                "fn": detection.fn,
+                "precision": detection.precision,
+                "recall": detection.recall,
+                "f1": detection.f1,
+            },
+            indent=2,
+        )
+    )
+    return 0 if result.images else 1
+
+
 def cmd_data_download(args: argparse.Namespace) -> int:
     from shelf.data.sku110k import download
 
@@ -105,6 +137,12 @@ def main(argv: list[str] | None = None) -> int:
     sub = parser.add_subparsers(dest="command", required=True)
 
     sub.add_parser("schema", help="print the report JSON schema").set_defaults(func=cmd_schema)
+
+    p = sub.add_parser("eval-gaps", help="evaluate synthetic gaps from annotation boxes")
+    p.add_argument("annotations", type=Path)
+    p.add_argument("--seed", type=int, default=0)
+    p.add_argument("--iou", type=float, default=0.5)
+    p.set_defaults(func=cmd_eval_gaps)
 
     data = sub.add_parser("data", help="SKU-110K dataset").add_subparsers(required=True)
     p = data.add_parser("download")
