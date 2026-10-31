@@ -233,6 +233,31 @@ Each is reported for: zero-shot VLM, fine-tuned VLM, detector + rules, detector 
 
 ## Data
 
+### Synthetic-gap baseline (M1 in progress)
+
+Run the annotation-only evaluator without downloading images or loading a model:
+
+```bash
+uv run shelf eval-gaps tests/fixtures/annotations_mini.csv --seed 0
+uv run shelf eval-gaps data/sku110k/SKU110K_fixed/annotations/annotations_test.csv --seed 0
+```
+
+For each image, the evaluator chooses one interior product from rows containing at least
+three boxes, removes it, reruns row grouping and gap finding, and matches predicted gaps
+against the removed box at IoU >= 0.5. Image names are sorted before seeded sampling.
+JSON output includes evaluated/skipped images, TP/FP/FN and micro precision/recall/F1;
+an input with no eligible images returns a nonzero exit status. `--iou` changes the match
+threshold. No output-schema fields or gap-finder thresholds are changed.
+
+This measures synthetic removal recovery using ground-truth product boxes. Natural gaps
+are not labelled in SKU-110K and count as false positives here; row-height boxes and
+merged gaps can also reduce IoU. These numbers are not real-world gap precision or
+detector accuracy. Full test-split results remain pending a dataset run.
+
+Fixture smoke result (`annotations_mini.csv`, seed 0, IoU 0.5): 2 evaluated images,
+2 TP / 2 FP / 0 FN; precision 0.500, recall 1.000, F1 0.667. This tiny fixture checks
+the evaluation path only and is not a benchmark result.
+
 - **SKU-110K** (Goldman et al., CVPR 2019): 11,743 shelf images with product boxes, no brand
   labels. `make data` downloads it (about 13.6 GB). Research use; see the
   [original repository](https://github.com/eg4000/SKU110K_CVPR19) for terms.

@@ -45,6 +45,8 @@ flowchart LR
 - [x] VLM client for any OpenAI-compatible server, with validation and one retry
 
 ### M1 - Baselines
+- Annotation-only synthetic-gap evaluator implemented (`shelf eval-gaps`); full SKU-110K
+  test-split run and recorded results pending. See README for the protocol and limitations.
 - [ ] Gap finder evaluated on SKU-110K ground-truth boxes (precision/recall with synthetic gaps
   made by removing boxes)
 - [ ] RT-DETR fine-tuned on SKU-110K; detection P/R/F1 and count MAE on the test split
