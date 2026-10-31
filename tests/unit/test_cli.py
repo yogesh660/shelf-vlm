@@ -25,6 +25,24 @@ def test_eval_gaps_empty(tmp_path, capsys):
     assert json.loads(capsys.readouterr().out)["images"] == 0
 
 
+def test_eval_detector(tmp_path, capsys):
+    predictions = tmp_path / "predictions.csv"
+    predictions.write_text("shelf_a.jpg,0,50,90,250,0.9\n")
+    assert (
+        main(
+            [
+                "eval-detector",
+                str(ROOT / "tests/fixtures/annotations_mini.csv"),
+                str(predictions),
+            ]
+        )
+        == 0
+    )
+    result = json.loads(capsys.readouterr().out)
+    assert result["tp"] == 1
+    assert result["fn"] == 27
+
+
 def test_rows(capsys):
     assert main(["rows", str(ROOT / "tests/fixtures/annotations_mini.csv"), "shelf_a.jpg"]) == 0
     out = capsys.readouterr().out

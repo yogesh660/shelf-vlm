@@ -56,6 +56,38 @@ def cmd_eval_gaps(args: argparse.Namespace) -> int:
     return 0 if result.images else 1
 
 
+def cmd_eval_detector(args: argparse.Namespace) -> int:
+    from shelf.data.sku110k import read_annotations
+    from shelf.detector_eval import evaluate_detector, read_predictions
+
+    try:
+        predictions = read_predictions(args.predictions, args.score)
+        result = evaluate_detector(predictions, read_annotations(args.annotations), args.iou)
+    except ValueError as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
+    detection = result.detection
+    print(
+        json.dumps(
+            {
+                "score_threshold": args.score,
+                "iou_threshold": args.iou,
+                "images": result.images,
+                "tp": detection.tp,
+                "fp": detection.fp,
+                "fn": detection.fn,
+                "precision": detection.precision,
+                "recall": detection.recall,
+                "f1": detection.f1,
+                "count_mae": result.counts.mae,
+                "count_mape": result.counts.mape,
+            },
+            indent=2,
+        )
+    )
+    return 0 if result.images else 1
+
+
 def cmd_data_download(args: argparse.Namespace) -> int:
     from shelf.data.sku110k import download
 
@@ -143,6 +175,13 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--iou", type=float, default=0.5)
     p.set_defaults(func=cmd_eval_gaps)
+
+    p = sub.add_parser("eval-detector", help="evaluate detector prediction boxes")
+    p.add_argument("annotations", type=Path)
+    p.add_argument("predictions", type=Path)
+    p.add_argument("--score", type=float, default=0.5)
+    p.add_argument("--iou", type=float, default=0.5)
+    p.set_defaults(func=cmd_eval_detector)
 
     data = sub.add_parser("data", help="SKU-110K dataset").add_subparsers(required=True)
     p = data.add_parser("download")

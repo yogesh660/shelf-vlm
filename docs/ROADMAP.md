@@ -47,6 +47,8 @@ flowchart LR
 ### M1 - Baselines
 - Annotation-only synthetic-gap evaluator implemented (`shelf eval-gaps`); full SKU-110K
   test-split run and recorded results pending. See README for the protocol and limitations.
+- RT-DETR training, prediction and detector-evaluation entry points implemented; full dataset
+  download, GPU training and test-split metrics pending.
 - [ ] Gap finder evaluated on SKU-110K ground-truth boxes (precision/recall with synthetic gaps
   made by removing boxes)
 - [ ] RT-DETR fine-tuned on SKU-110K; detection P/R/F1 and count MAE on the test split

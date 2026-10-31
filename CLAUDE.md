@@ -42,6 +42,7 @@ tests/test_harness.py  checks on the repo itself
 docs/adr/           why things are the way they are
 site/               public case-study page (Plotly charts, SVG diagrams), deployed by pages.yml
 scripts/            site_assets.py builds site/img and site/data.js from the core and examples
+train/              optional GPU entry points; RT-DETR training and prediction
 ```
 
 ## Rules
