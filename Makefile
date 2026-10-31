@@ -18,12 +18,12 @@ lock: ## Re-resolve dependencies into uv.lock after editing pyproject.toml
 	uv lock
 
 lint: ## Ruff lint and format check (no changes)
-	$(RUN) ruff check src tests scripts
-	$(RUN) ruff format --check src tests scripts
+	$(RUN) ruff check src tests scripts train
+	$(RUN) ruff format --check src tests scripts train
 
 format: ## Auto-fix lint issues and format code
-	$(RUN) ruff check --fix src tests scripts
-	$(RUN) ruff format src tests scripts
+	$(RUN) ruff check --fix src tests scripts train
+	$(RUN) ruff format src tests scripts train
 
 typecheck: ## Mypy (strict) on src/
 	$(RUN) mypy

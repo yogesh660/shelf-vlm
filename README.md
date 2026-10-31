@@ -258,6 +258,30 @@ Fixture smoke result (`annotations_mini.csv`, seed 0, IoU 0.5): 2 evaluated imag
 2 TP / 2 FP / 0 FN; precision 0.500, recall 1.000, F1 0.667. This tiny fixture checks
 the evaluation path only and is not a benchmark result.
 
+### RT-DETR baseline (M1 in progress)
+
+The training entry point consumes the existing SKU-110K layout and fine-tunes the
+single-class RT-DETR checkpoint. Training images stay under the ignored `data/` directory;
+checkpoints and prediction files stay under ignored `outputs/`.
+
+```bash
+uv sync --extra train
+uv run python -m train.rtdetr train --data data/sku110k --output outputs/rtdetr-sku110k
+uv run python -m train.rtdetr predict \
+  --model outputs/rtdetr-sku110k \
+  --annotations data/sku110k/SKU110K_fixed/annotations/annotations_test.csv \
+  --images data/sku110k/SKU110K_fixed/images \
+  --output outputs/rtdetr-test.csv
+uv run shelf eval-detector \
+  data/sku110k/SKU110K_fixed/annotations/annotations_test.csv \
+  outputs/rtdetr-test.csv --score 0.5 --iou 0.5
+```
+
+The final command reports micro detection precision/recall/F1 and per-image count
+MAE/MAPE. The checkpoint is initialized from `PekingU/rtdetr_r50vd`, uses 640x640 processor
+inputs, and defaults to 10 epochs with effective batch size 16. Full metrics remain pending
+the GPU run.
+
 - **SKU-110K** (Goldman et al., CVPR 2019): 11,743 shelf images with product boxes, no brand
   labels. `make data` downloads it (about 13.6 GB). Research use; see the
   [original repository](https://github.com/eg4000/SKU110K_CVPR19) for terms.

@@ -16,7 +16,14 @@ dependencies = ["pydantic>=2.7"]
 
 [project.optional-dependencies]
 # filled in as milestones land (docs/ROADMAP.md)
-train = ["torch>=2.4", "transformers>=4.50", "peft>=0.13", "trl>=0.12", "accelerate>=1.0"]
+train = [
+    "torch>=2.4",
+    "transformers>=4.50",
+    "peft>=0.13",
+    "trl>=0.12",
+    "accelerate>=1.0",
+    "pillow>=10",
+]
 app = ["gradio>=5", "pillow>=10"]
 tracking = ["mlflow>=3"]
 
@@ -32,7 +39,7 @@ packages = ["src/shelf"]
 [tool.ruff]
 line-length = 100
 target-version = "py311"
-src = ["src", "tests", "scripts"]
+src = ["src", "tests", "scripts", "train"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "SIM", "RUF", "PT"]
