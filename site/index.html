@@ -59,7 +59,7 @@
 <dt>Domain</dt><dd>Consumer goods and retail, in-store execution</dd>
 <dt>Type</dt><dd>Independent R&amp;D project, end-to-end reference build</dd>
 <dt>My role</dt><dd>Architecture, implementation, evaluation design</dd>
-<dt>Status</dt><dd><span class="status">M0 of 5 · core logic built and tested</span></dd>
+<dt>Status</dt><dd><span class="status">M1 of 5 · evaluation code built, runs pending</span></dd>
 <dt>Core stack</dt><dd><div class="chips"><span>Qwen3-VL</span><span>RT-DETR</span><span>TRL + LoRA</span><span>vLLM</span><span>pydantic</span><span>MLflow</span></div></dd>
 </dl>
 </aside>
@@ -165,7 +165,7 @@
 <div class="layers reveal">
 <div class="layer"><small>Experience</small><div class="chips"><span>CLI</span><span class="planned">Gradio app</span><span class="planned">overlay images</span></div></div>
 <div class="layer"><small>Serving</small><div class="chips"><span>OpenAI-compatible client</span><span class="planned">vLLM · guided JSON</span><span class="planned">HF Spaces ZeroGPU</span><span class="planned">Modal</span></div></div>
-<div class="layer"><small>Models</small><div class="chips"><span class="planned">Qwen3-VL + LoRA</span><span class="planned">RT-DETR</span><span class="planned">TRL · PEFT</span></div></div>
+<div class="layer"><small>Models</small><div class="chips"><span class="planned">Qwen3-VL + LoRA</span><span>RT-DETR (training code)</span><span class="planned">TRL · PEFT</span></div></div>
 <div class="layer"><small>Business logic</small><div class="chips"><span>ShelfReport schema</span><span>shelf rows + gaps</span><span>planogram compliance</span><span>metrics</span></div></div>
 <div class="layer"><small>Data</small><div class="chips"><span>SKU-110K loader</span><span class="planned">Label Studio</span><span class="planned">DVC</span><span class="planned">own labelled photos</span></div></div>
 <div class="layer"><small>Tracking</small><div class="chips"><span class="planned">MLflow runs + model registry</span></div></div>
@@ -218,7 +218,7 @@
 <div class="kpi pending"><small>Compliance F1</small><strong>—</strong><span>missing, extra, misplaced vs truth</span></div>
 <div class="kpi pending"><small>Valid JSON</small><strong>—</strong><span>before and after guided decoding</span></div>
 </div>
-<p class="note reveal">Baselines arrive with M1. What exists today: the scoring code for all four, unit tested against hand-built cases.</p>
+<p class="note reveal">M1 is under way: the synthetic-gap evaluator, RT-DETR training and evaluation, and the zero-shot VLM evaluator are built and tested. The full SKU-110K and GPU runs are pending, so no baseline numbers are published yet.</p>
 <div class="findings reveal">
 <div class="finding"><span class="badge fixed">Built</span><div><h4>Rule-based gap finder</h4><p>Groups boxes into shelves (robust to one tall pack spilling into the shelf below) and flags empty slots between products and at shelf ends. It is the baseline every model has to beat.</p></div></div>
 <div class="finding"><span class="badge fixed">Built</span><div><h4>Compliance that tells "missing" from "misplaced"</h4><p>A product on the wrong shelf is reported as misplaced, not as one missing and one extra item, which is how a field auditor would describe it.</p></div></div>
@@ -264,7 +264,7 @@
 </div>
 <div class="timeline">
 <article class="mile reveal"><div class="m">M0</div><span class="st done">Done</span><div><h3>Core and contract</h3><p>ShelfReport schema, shelf rows and gaps, planogram compliance, metrics, SKU-110K loader, VLM client with validation and retry, CI.</p></div></article>
-<article class="mile reveal"><div class="m">M1</div><span class="st now">Next</span><div><h3>Baselines</h3><p>Gap finder on SKU-110K, RT-DETR fine-tuned for detection, zero-shot Qwen3-VL; first numbers in MLflow.</p><div class="chips"><span>RT-DETR</span><span>Qwen3-VL zero-shot</span><span>MLflow</span></div></div></article>
+<article class="mile reveal"><div class="m">M1</div><span class="st now">In progress</span><div><h3>Baselines</h3><p>Built: synthetic-gap evaluator, RT-DETR training and evaluation, zero-shot VLM evaluator. Pending: full test-split and GPU runs, numbers in MLflow.</p><div class="chips"><span>RT-DETR</span><span>Qwen3-VL zero-shot</span><span>MLflow</span></div></div></article>
 <article class="mile reveal"><div class="m">M2</div><span class="st">Planned</span><div><h3>Own data</h3><p>150-300 labelled shelf photos, synthetic planograms with controlled changes, training conversations, DVC.</p></div></article>
 <article class="mile reveal"><div class="m">M3</div><span class="st">Planned</span><div><h3>Fine-tune</h3><p>LoRA SFT of Qwen3-VL; before/after on every metric; error analysis by density, lighting and angle.</p></div></article>
 <article class="mile reveal"><div class="m">M4</div><span class="st">Planned</span><div><h3>Hybrid and structured output</h3><p>Detector boxes as hints to the VLM, guided JSON decoding in vLLM, overlay images.</p></div></article>
